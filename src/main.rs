@@ -5,20 +5,20 @@ use std::path::Path;
 
 struct TruncRead<R: Read> {
     inner: R,
-    count: usize,
-    max: usize,
+    count: u64,
+    max: u64,
 }
 
 impl <R> Read for TruncRead<R> where R: Read {
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
         if self.count >= self.max {
             Ok(0)
-        } else if buf.len() + self.count > self.max {
+        } else if buf.len() as u64 + self.count > self.max {
             let actual_len = self.max - self.count;
-            let r = self.inner.read(&mut buf[..actual_len]);
+            let r = self.inner.read(&mut buf[..actual_len as usize]);
 
             if let Ok(bytes_read) = r {
-                self.count += bytes_read;
+                self.count += bytes_read as u64;
             }
 
             r
@@ -26,7 +26,7 @@ impl <R> Read for TruncRead<R> where R: Read {
             let r = self.inner.read(buf);
 
             if let Ok(bytes_read) = r {
-                self.count += bytes_read;
+                self.count += bytes_read as u64;
             }
 
             r
@@ -35,7 +35,7 @@ impl <R> Read for TruncRead<R> where R: Read {
 }
 
 impl <R: Read> TruncRead<R> {
-    fn new(inner: R, max_size: usize) -> TruncRead<R> {
+    fn new(inner: R, max_size: u64) -> TruncRead<R> {
         TruncRead {
             inner: inner,
             count: 0,
@@ -57,7 +57,7 @@ where P1: AsRef<Path>, P2: AsRef<Path>, P3: AsRef<Path> {
     let mut first_out = BufWriter::new(try!(File::create(out1)));
     let mut second_out = BufWriter::new(try!(File::create(out2)));
 
-    let mut first_reader = TruncRead::new(input_buffer, first_file_size as usize);
+    let mut first_reader = TruncRead::new(input_buffer, first_file_size);
     try!(copy(&mut first_reader, &mut first_out));
     let mut second_reader = first_reader.unwrap();
     try!(copy(&mut second_reader, &mut second_out));
