@@ -1,0 +1,10 @@
+[package]
+name = "split"
+version = "0.1.0"
+authors = ["Ty Overby <ty@pre-alpha.com>"]
+
+[[bin]]
+name = "split"
+path = "./src/main.rs"
+
+[dependencies]
